@@ -1,0 +1,7 @@
+.bar {
+    position: absolute;
+	box-sizing: border-box;
+	background: grey;
+	border: 1px solid white;
+	transition: left 0.2s;
+}
