@@ -5,7 +5,7 @@ import "./ArrayContainer.css";
 function makeArray(num) {
   var tempArr = [];
   for (var i = 0; i < num; i++) {
-    tempArr.push(Math.random() * 150 + 20);
+    tempArr.push(Math.floor(Math.random() * 150 + 20));
   }
   return tempArr;
 }
@@ -17,6 +17,46 @@ function swap(arr, a, b) {
 }
 function compare(a, b) {
   return a > b ? true : false;
+}
+function mergeSort(arr, l, r) {
+  if (l >= r) {
+    return;
+  }
+  var m = l + Math.floor((r - l) / 2);
+  mergeSort(arr, l, m);
+  mergeSort(arr, m + 1, r);
+  merge(arr, l, m, r);
+}
+function merge(arr, l, m, r) {
+  var n1 = m - l + 1;
+  var n2 = r - m;
+
+  var temp1 = Array(n1);
+  var temp2 = Array(n2);
+
+  for (var i = 0; i < n1; i++) {
+    temp1[i] = arr[l + i];
+  }
+  for (var i = 0; i < n2; i++) {
+    temp2[i] = arr[m + 1 + i];
+  }
+  var i = 0;
+  var j = 0;
+  var k = l;
+  while (i < n1 && j < n2) {
+    if (temp1[i] <= temp2[j]) {
+      arr[k] = temp1[i++];
+    } else {
+      arr[k] = temp2[j++];
+    }
+    k++;
+  }
+  while (i < n1) {
+    arr[k++] = temp1[i++];
+  }
+  while (j < n2) {
+    arr[k++] = temp2[j++];
+  }
 }
 function bubbleSort(arr) {
   var sortedAt = arr.length;
@@ -34,22 +74,21 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 function bubbleSortStep(arr) {
-  var swappedPairs = [];
   var comparedPairs = [];
   var sortedAt = arr.length;
   while (sortedAt > 1) {
     for (var k = 0; k < sortedAt; k++) {
-      if (k + 1 < sortedAt) {
-        comparedPairs.push([k, k + 1]);
+      if (!(k + 1 >= sortedAt)) {
+        comparedPairs.push([k, k + 1, 0]);
         if (arr[k] > arr[k + 1]) {
-          swappedPairs.push([k, k + 1]);
+          comparedPairs[comparedPairs.length - 1][2] = 1;
           swap(arr, k, k + 1);
         }
       }
     }
     sortedAt--;
   }
-  return [arr, swappedPairs, comparedPairs];
+  return [arr, comparedPairs];
 }
 function ArrayContainer({ sortList }) {
   const numElements = 10;
@@ -59,34 +98,23 @@ function ArrayContainer({ sortList }) {
   var [barColors, setBarColors] = useState(Array(numElements).fill("red"));
   var barWidth = containerWidth / values.length;
 
-  function btnSortClicked() {
+  function btnBubbleSortClicked() {
     // setValues(bubbleSort(values.slice()));
     var returnedValues = bubbleSortStep(values.slice());
     var sorted = returnedValues[0];
-    var swappedPairs = returnedValues[1];
-    var comparedPairs = returnedValues[2];
-    var newArray = [...values];
+    var comparedPairs = returnedValues[1];
     const arrayBars = document.getElementsByClassName("bar");
     // Returns a Promise that resolves after "ms" Milliseconds
-    var paused = 500;
+    var paused = 400;
     const timer = (ms) => new Promise((res) => setTimeout(res, ms));
     async function load() {
       // We need to wrap the loop into an async function for this to work
       for (var i = 0; i < comparedPairs.length; i++) {
         var swapped = false;
-        swappedPairs.map(function (value, index) {
-          if (comparedPairs[i][2] === value[2]) {
-            swapped = true;
-          }
-        });
-        if (swapped) {
+        if (comparedPairs[i][2]) {
           arrayBars[comparedPairs[i][0]].style.backgroundColor = "purple";
           arrayBars[comparedPairs[i][1]].style.backgroundColor = "purple";
           await timer(paused);
-          // const temp = arrayBars[comparedPairs[i][0]].style.height;
-          // arrayBars[comparedPairs[i][0]].style.height =
-          //   arrayBars[comparedPairs[i][1]].style.height;
-          // arrayBars[comparedPairs[i][1]].style.height = temp;
           [
             arrayBars[comparedPairs[i][0]].style.height,
             arrayBars[comparedPairs[i][1]].style.height,
@@ -108,16 +136,12 @@ function ArrayContainer({ sortList }) {
       }
     }
     load();
-    // for (var k = 0; k < swappedPairs.length; k++) {
-
-    //   setTimeout(() => {
-    //     console.log(k);
-    //     var temp = arrayBars[swappedPairs[k][0]].style;
-    //     arrayBars[swappedPairs[k][0]].style =
-    //       arrayBars[swappedPairs[k][1]].style;
-    //     arrayBars[swappedPairs[k][1]].style = temp;
-    //   }, 1 * k);
-    // }
+  }
+  function btnMergeSortClicked() {
+    console.log(values);
+    var tempArray = values.slice();
+    mergeSort(tempArray, 0, tempArray.length - 1);
+    setValues(tempArray);
   }
   function btnReset() {
     setValues(makeArray(numElements));
@@ -125,7 +149,8 @@ function ArrayContainer({ sortList }) {
   return (
     <div>
       <button onClick={btnReset}>Generate New Array</button>
-      <button onClick={btnSortClicked}>Click me to sort</button>
+      <button onClick={btnBubbleSortClicked}>BubbleSort</button>
+      <button onClick={btnMergeSortClicked}>MergeSort</button>
       <div
         className="array"
         style={{
